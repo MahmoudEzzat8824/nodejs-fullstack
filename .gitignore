@@ -1,0 +1,40 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Environment
+.env
+.env.*.local
+.env.local
+
+# Logs
+logs/
+*.log
+
+# Build / output
+build/
+dist/
+coverage/
+.cache/
+
+# Frontend / Backend specific
+frontend/build/
+frontend/node_modules/
+backend/node_modules/
+backend/.env
+
+# Docker / compose
+docker-compose.override.yml
+Dockerfile*
+docker-compose*.yml
+
+# IDEs / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Archives
+*.tgz

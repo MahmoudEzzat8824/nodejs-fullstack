@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKER_COMPOSE_FILE = 'docker-compose.yml'
         PROJECT_NAME = 'nodejs-fullstack'
+        MONGO_URI = credentials('mongo-uri') // Add this credential in Jenkins
     }
     
     stages {
@@ -13,10 +14,26 @@ pipeline {
             }
         }
         
+        stage('Setup Environment') {
+            steps {
+                script {
+                    echo 'Creating .env file...'
+                    sh """
+                        mkdir -p backend
+                        cat > backend/.env <<EOF
+MONGO_URI=${MONGO_URI}
+PORT=5000
+EOF
+                    """
+                }
+            }
+        }
+        
         stage('Verify Files') {
             steps {
                 sh 'ls -la'
-                sh 'cat docker-compose.yml || echo "docker-compose.yml not found"'
+                sh 'ls -la backend/'
+                sh 'cat docker-compose.yml'
             }
         }
         

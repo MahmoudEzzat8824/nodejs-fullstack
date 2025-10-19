@@ -1,0 +1,25 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build & Deploy') {
+            steps {
+                sh 'docker-compose down || true'
+                sh 'docker-compose up -d --build'
+                sh 'docker-compose ps'
+            }
+        }
+    }
+    
+    post {
+        always {
+            sh 'docker-compose logs'
+        }
+    }
+}

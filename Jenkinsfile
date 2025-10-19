@@ -13,11 +13,18 @@ pipeline {
             }
         }
         
+        stage('Verify Files') {
+            steps {
+                sh 'ls -la'
+                sh 'cat docker-compose.yml || echo "docker-compose.yml not found"'
+            }
+        }
+        
         stage('Build') {
             steps {
                 script {
                     echo 'Building Docker images...'
-                    sh 'docker-compose build'
+                    sh 'docker-compose -f ${DOCKER_COMPOSE_FILE} build'
                 }
             }
         }
@@ -44,13 +51,13 @@ pipeline {
             steps {
                 script {
                     echo 'Stopping existing containers...'
-                    sh 'docker-compose down || true'
+                    sh 'docker-compose -f ${DOCKER_COMPOSE_FILE} down || true'
                     
                     echo 'Starting new containers...'
-                    sh 'docker-compose up -d'
+                    sh 'docker-compose -f ${DOCKER_COMPOSE_FILE} up -d'
                     
                     echo 'Checking container status...'
-                    sh 'docker-compose ps'
+                    sh 'docker-compose -f ${DOCKER_COMPOSE_FILE} ps'
                 }
             }
         }
@@ -59,7 +66,7 @@ pipeline {
             steps {
                 script {
                     echo 'Waiting for services to start...'
-                    sleep(time: 10, unit: 'SECONDS')
+                    sleep(time: 15, unit: 'SECONDS')
                     
                     echo 'Checking backend health...'
                     sh 'curl -f http://localhost:5000 || exit 1'
@@ -77,7 +84,7 @@ pipeline {
         }
         failure {
             echo 'Pipeline failed!'
-            sh 'docker-compose logs'
+            sh 'docker-compose -f ${DOCKER_COMPOSE_FILE} logs || true'
         }
         always {
             echo 'Cleaning up...'

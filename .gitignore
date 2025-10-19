@@ -28,7 +28,6 @@ backend/.env
 # Docker / compose
 docker-compose.override.yml
 Dockerfile*
-docker-compose*.yml
 
 # IDEs / OS
 .vscode/

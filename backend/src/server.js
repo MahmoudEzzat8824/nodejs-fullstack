@@ -15,8 +15,10 @@ if (!mongoURI) {
 app.use(cors());
 app.use(express.json());
 
-// basic route
-app.get('/', (req, res) => res.send('API is running...'));
+// Routes
+app.get('/', (req, res) => res.send('Task Manager API is running...'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/tasks', require('./routes/tasks'));
 
 async function start() {
   try {

@@ -1,10 +1,10 @@
 FROM node:18-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # install production deps only
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # copy source
 COPY . .

@@ -20,10 +20,10 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
-      - name: Build and push Docker images
+      - name: Build and push backend Docker image
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ./backend
           file: ./backend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/nodejs-fullstack-backend:latest
@@ -31,7 +31,7 @@ jobs:
       - name: Build and push frontend Docker image
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ./frontend
           file: ./frontend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/nodejs-fullstack-frontend:latest

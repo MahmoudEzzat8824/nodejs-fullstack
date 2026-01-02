@@ -4,10 +4,13 @@ npm-debug.log
 yarn-error.log
 pnpm-debug.log
 
-# Environment
+# Environment & Secrets
 .env
 .env.*.local
 .env.local
+.secrets
+secrets.txt
+credentials.txt
 
 # Logs
 logs/

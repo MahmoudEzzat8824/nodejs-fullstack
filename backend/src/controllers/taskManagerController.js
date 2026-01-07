@@ -1,25 +1,28 @@
-const Task = require('../models/Task');
+const TaskManager = require('../models/TaskManager');
 
-// @desc    Get all tasks for logged-in user
-// @route   GET /api/tasks
-// @access  Private
-exports.getTasks = async (req, res) => {
+// @desc    Get all tasks from taskmanager collection
+// @route   GET /api/taskmanager
+// @access  Public
+exports.getAllTasks = async (req, res) => {
   try {
-    const { status, priority, sort } = req.query;
+    const { status, priority, category, sort } = req.query;
     
     // Build query
-    const query = { user: req.user._id };
+    const query = {};
     if (status) query.status = status;
     if (priority) query.priority = priority;
+    if (category) query.category = category;
 
     // Build sort
     let sortOption = { createdAt: -1 };
     if (sort === 'dueDate') sortOption = { dueDate: 1 };
     if (sort === 'priority') {
+      const priorityOrder = { high: 1, medium: 2, low: 3 };
       sortOption = { priority: 1, createdAt: -1 };
     }
+    if (sort === 'title') sortOption = { title: 1 };
 
-    const tasks = await Task.find(query).sort(sortOption);
+    const tasks = await TaskManager.find(query).sort(sortOption);
 
     res.json({
       success: true,
@@ -31,19 +34,17 @@ exports.getTasks = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching tasks',
+      error: error.message,
     });
   }
 };
 
-// @desc    Get single task
-// @route   GET /api/tasks/:id
-// @access  Private
+// @desc    Get single task by ID
+// @route   GET /api/taskmanager/:id
+// @access  Public
 exports.getTask = async (req, res) => {
   try {
-    const task = await Task.findOne({
-      _id: req.params.id,
-      user: req.user._id,
-    });
+    const task = await TaskManager.findById(req.params.id);
 
     if (!task) {
       return res.status(404).json({
@@ -60,21 +61,17 @@ exports.getTask = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching task',
+      error: error.message,
     });
   }
 };
 
 // @desc    Create new task
-// @route   POST /api/tasks
-// @access  Private
+// @route   POST /api/taskmanager
+// @access  Public
 exports.createTask = async (req, res) => {
   try {
-    const taskData = {
-      ...req.body,
-      user: req.user._id,
-    };
-
-    const task = await Task.create(taskData);
+    const task = await TaskManager.create(req.body);
 
     res.status(201).json({
       success: true,
@@ -91,14 +88,15 @@ exports.createTask = async (req, res) => {
 };
 
 // @desc    Update task
-// @route   PUT /api/tasks/:id
-// @access  Private
+// @route   PUT /api/taskmanager/:id
+// @access  Public
 exports.updateTask = async (req, res) => {
   try {
-    let task = await Task.findOne({
-      _id: req.params.id,
-      user: req.user._id,
-    });
+    const task = await TaskManager.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, updatedAt: Date.now() },
+      { new: true, runValidators: true }
+    );
 
     if (!task) {
       return res.status(404).json({
@@ -106,11 +104,6 @@ exports.updateTask = async (req, res) => {
         message: 'Task not found',
       });
     }
-
-    task = await Task.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
 
     res.json({
       success: true,
@@ -126,14 +119,11 @@ exports.updateTask = async (req, res) => {
 };
 
 // @desc    Delete task
-// @route   DELETE /api/tasks/:id
-// @access  Private
+// @route   DELETE /api/taskmanager/:id
+// @access  Public
 exports.deleteTask = async (req, res) => {
   try {
-    const task = await Task.findOne({
-      _id: req.params.id,
-      user: req.user._id,
-    });
+    const task = await TaskManager.findByIdAndDelete(req.params.id);
 
     if (!task) {
       return res.status(404).json({
@@ -142,49 +132,58 @@ exports.deleteTask = async (req, res) => {
       });
     }
 
-    await Task.findByIdAndDelete(req.params.id);
-
     res.json({
       success: true,
       message: 'Task deleted successfully',
-      data: {},
+      data: task,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error deleting task',
+      error: error.message,
     });
   }
 };
 
 // @desc    Get task statistics
-// @route   GET /api/tasks/stats
-// @access  Private
+// @route   GET /api/taskmanager/stats
+// @access  Public
 exports.getTaskStats = async (req, res) => {
   try {
-    const stats = await Task.aggregate([
-      { $match: { user: req.user._id } },
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
-    const total = await Task.countDocuments({ user: req.user._id });
+    const totalTasks = await TaskManager.countDocuments();
+    const pendingTasks = await TaskManager.countDocuments({ status: 'pending' });
+    const inProgressTasks = await TaskManager.countDocuments({ status: 'in-progress' });
+    const completedTasks = await TaskManager.countDocuments({ status: 'completed' });
+    
+    const highPriority = await TaskManager.countDocuments({ priority: 'high' });
+    const mediumPriority = await TaskManager.countDocuments({ priority: 'medium' });
+    const lowPriority = await TaskManager.countDocuments({ priority: 'low' });
+    
+    const categories = await TaskManager.distinct('category');
 
     res.json({
       success: true,
       data: {
-        total,
-        byStatus: stats,
+        total: totalTasks,
+        byStatus: {
+          pending: pendingTasks,
+          'in-progress': inProgressTasks,
+          completed: completedTasks,
+        },
+        byPriority: {
+          high: highPriority,
+          medium: mediumPriority,
+          low: lowPriority,
+        },
+        categories,
       },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Error fetching statistics',
+      error: error.message,
     });
   }
 };

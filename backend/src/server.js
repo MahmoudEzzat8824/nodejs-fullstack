@@ -19,6 +19,7 @@ app.use(express.json());
 app.get('/', (req, res) => res.send('Task Manager API is running...'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/tasks', require('./routes/tasks'));
+app.use('/api/taskmanager', require('./routes/taskmanager'));
 
 async function start() {
   try {

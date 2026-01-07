@@ -39,3 +39,6 @@ docker-compose.override.yml
 
 # Archives
 *.tgz
+
+# k8s
+secret.yaml

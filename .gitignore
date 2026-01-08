@@ -42,3 +42,10 @@ docker-compose.override.yml
 
 # k8s
 secret.yaml
+
+# Monitoring data
+monitoring/data/
+monitoring/grafana/
+
+# Package lock files (use in subdirectories only)
+/package-lock.json
